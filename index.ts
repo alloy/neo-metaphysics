@@ -5,10 +5,6 @@ import { makeRemoteExecutableSchema, mergeSchemas } from 'graphql-tools';
 import { createApolloFetch } from 'apollo-fetch';
 
 async function run() {
-  // const metaphysicsSchema = await makeRemoteExecutableSchema(createApolloFetch({
-  //   uri: 'https://metaphysics-staging.artsy.net',
-  // }));
-
   const positronSchema = await makeRemoteExecutableSchema(createApolloFetch({
     uri: 'https://stagingwriter.artsy.net/api/graphql',
   }));
@@ -17,39 +13,14 @@ async function run() {
     uri: 'https://stagingapi.artsy.net/api/graphql',
   }));
 
-  // const universeSchema = await makeRemoteExecutableSchema(createApolloFetch({
-  //   uri: 'https://www.universe.com/graphql/beta',
-  // }));
-
-  // const weatherSchema = await makeRemoteExecutableSchema(createApolloFetch({
-  //   uri: 'https://5rrx10z19.lp.gql.zone/graphql',
-  // }));
-
-  // const schema = mergeSchemas({
-  //   schemas: [universeSchema, weatherSchema],
-  //   links: [
-  //     {
-  //       name: 'location',
-  //       from: 'Event',
-  //       to: 'location',
-  //       resolveArgs: parent => ({ place: parent.cityName }),
-  //       fragment: `
-  //         fragment WeatherLocationArgs on Event {
-  //           cityName
-  //         }
-  //       `,
-  //     },
-  //   ],
-  // });
-
   const schema = mergeSchemas({
     schemas: [gravitySchema, positronSchema],
     onTypeConflict: (leftType, rightType) => leftType, // Prefer Gravity over positron, for e.g. Artwork
     links: [
       {
         name: 'partners',
-        from: 'Anon201',
-        to: 'partners',
+        from: 'Anon201', // TODO Figure out why Positron returns this instead of Article for the `article` root field
+        to: 'partner', // TODO Gravity should rename this to be plural
         resolveArgs: parent => ({ ids: parent.partner_ids }),
         fragment: `
           fragment ArticlePartners on Anon201 {
@@ -69,17 +40,10 @@ async function run() {
     graphiqlExpress({
       endpointURL: '/graphql',
       query: `query {
-  event(id: "5983706debf3140039d1e8b4") {
+  article(id: "58d535ba8fcf0a002767b338") {
     title
-    description
-    url
-    location {
-      city
-      country
-      weather {
-        summary
-        temperature
-      }
+    partners {
+      display_name
     }
   }
 }
