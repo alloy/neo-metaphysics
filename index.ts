@@ -5,25 +5,55 @@ import { makeRemoteExecutableSchema, mergeSchemas } from 'graphql-tools';
 import { createApolloFetch } from 'apollo-fetch';
 
 async function run() {
-  const universeSchema = await makeRemoteExecutableSchema(createApolloFetch({
-    uri: 'https://www.universe.com/graphql/beta',
+  // const metaphysicsSchema = await makeRemoteExecutableSchema(createApolloFetch({
+  //   uri: 'https://metaphysics-staging.artsy.net',
+  // }));
+
+  const positronSchema = await makeRemoteExecutableSchema(createApolloFetch({
+    uri: 'https://stagingwriter.artsy.net/api/graphql',
   }));
 
-  const weatherSchema = await makeRemoteExecutableSchema(createApolloFetch({
-    uri: 'https://5rrx10z19.lp.gql.zone/graphql',
+  const gravitySchema = await makeRemoteExecutableSchema(createApolloFetch({
+    uri: 'https://stagingapi.artsy.net/api/graphql',
   }));
+
+  // const universeSchema = await makeRemoteExecutableSchema(createApolloFetch({
+  //   uri: 'https://www.universe.com/graphql/beta',
+  // }));
+
+  // const weatherSchema = await makeRemoteExecutableSchema(createApolloFetch({
+  //   uri: 'https://5rrx10z19.lp.gql.zone/graphql',
+  // }));
+
+  // const schema = mergeSchemas({
+  //   schemas: [universeSchema, weatherSchema],
+  //   links: [
+  //     {
+  //       name: 'location',
+  //       from: 'Event',
+  //       to: 'location',
+  //       resolveArgs: parent => ({ place: parent.cityName }),
+  //       fragment: `
+  //         fragment WeatherLocationArgs on Event {
+  //           cityName
+  //         }
+  //       `,
+  //     },
+  //   ],
+  // });
 
   const schema = mergeSchemas({
-    schemas: [universeSchema, weatherSchema],
+    schemas: [gravitySchema, positronSchema],
+    onTypeConflict: (leftType, rightType) => leftType, // Prefer Gravity over positron, for e.g. Artwork
     links: [
       {
-        name: 'location',
-        from: 'Event',
-        to: 'location',
-        resolveArgs: parent => ({ place: parent.cityName }),
+        name: 'partners',
+        from: 'Anon201',
+        to: 'partners',
+        resolveArgs: parent => ({ ids: parent.partner_ids }),
         fragment: `
-          fragment WeatherLocationArgs on Event {
-            cityName
+          fragment ArticlePartners on Anon201 {
+            partner_ids
           }
         `,
       },
