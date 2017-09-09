@@ -16,7 +16,19 @@ async function run() {
   const schema = mergeSchemas({
     schemas: [gravitySchema, positronSchema],
     onTypeConflict: (leftType, rightType) => leftType, // Prefer Gravity over positron, for e.g. Artwork
-    links: [],
+    links: [
+      {
+        name: 'partners',
+        from: 'Anon201', // TODO Figure out why Positron returns this instead of Article for the `article` root field
+        to: 'partner', // TODO Gravity should rename this to be plural
+        resolveArgs: parent => ({ ids: parent.partner_ids }),
+        fragment: `
+          fragment ArticlePartners on Anon201 {
+            partner_ids
+          }
+        `,
+      },
+    ],
   });
 
   const app = express();
