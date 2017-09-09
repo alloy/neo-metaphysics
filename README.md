@@ -15,8 +15,6 @@ yarn start
 
 Then, open [localhost:3000/graphiql](http://localhost:3000/graphiql) in your web browser, and hit run on the query!
 
-Oh and also grab a ticket for [GraphQL Summit 2017](https://summit.graphql.com/), a 2-day GraphQL conference in San Francisco on October 25-26.
-
 ### What does this do?
 
 In short, this combines two GraphQL APIs:
