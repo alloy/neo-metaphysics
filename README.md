@@ -9,8 +9,8 @@ Huge thanks to [Mikhail Novikov](https://github.com/freiksenet) for his awesome 
 Just run it like any other npm project:
 
 ```
-npm install
-npm start
+yarn install
+yarn start
 ```
 
 Then, open [localhost:3000/graphiql](http://localhost:3000/graphiql) in your web browser, and hit run on the query!
@@ -19,81 +19,44 @@ Oh and also grab a ticket for [GraphQL Summit 2017](https://summit.graphql.com/)
 
 ### What does this do?
 
-For all of the details, read the upcoming blog post (TODO).
-
 In short, this combines two GraphQL APIs:
 
-1. The [public GraphQL API](https://developers.universe.com/page/graphql-explorer) of Universe, the ticketing system we're using for GraphQL Summit
-2. The [Dark Sky weather API wrapped in GraphQL on Launchpad](https://launchpad.graphql.com/5rrx10z19), built by [Matt Dionis](https://github.com/Matt-Dionis)
+1. Artsy’s Gravity GraphQL API
+2. Artsy’s Positron GraphQL API
 
 Against those two APIs, we can run the following queries:
 
 ```graphql
-# Get information about GraphQL Summit from Universe
+# Get article information from Positron
 query {
-  event(id: "5983706debf3140039d1e8b4") {
+  article(id: "58d535ba8fcf0a002767b338") {
     title
-    venueName
-    address
-    cityName
+    partner_ids
   }
 }
 
-# Get weather information about San Francisco from Dark Sky
+# Get partner information from Gravity
 query {
-  location(place: "San Francisco") {
-    city
-    country
-    weather {
-      summary
-      temperature
-    }
+  partner(ids: ["4dd15229e0091e000100166b"]) {
+    display_name
   }
 }
 ```
 
-One thing that stands out is that the `cityName` field from Universe matches up nicely with the argument to the `location` field in the Dark Sky API. So what if we could just nicely pipe one into the other? Well, with schema stitching in graphql-tools 2.0, we now can!
+One thing that stands out is that the `partner_ids` field from Positron matches up nicely with the argument to the `partner` field in the Gravity API. So what if we could just nicely pipe one into the other? Well, with schema stitching in graphql-tools 2.0, we now can! (See [the example](index.ts) for details.)
 
-```ts
-const schema = mergeSchemas({
-  schemas: [universeSchema, weatherSchema],
-  links: [
-    {
-      name: 'location',
-      from: 'Event',
-      to: 'location',
-      resolveArgs: parent => ({ place: parent.cityName }),
-      fragment: `
-        fragment WeatherLocationArgs on Event {
-          cityName
-        }
-      `,
-    },
-  ],
-});
-```
-
-This is saying that we want to add a `location` field on the `Event` type, and to call it we need the `cityName` field. Then, it just maps that field onto the `place` argument on the location field. Now, we can run the following query that gets information from both APIs!
+Now, we can run the following query that gets information from both APIs!
 
 ```graphql
 query {
-  # From the Universe API
-  event(id: "5983706debf3140039d1e8b4") {
+  # From the Positron API
+  article(id: "58d535ba8fcf0a002767b338") {
     title
-    description
-    url
 
-    # Stitched field that goes to the Dark Sky API
-    location {
-      city
-      country
-      weather {
-        summary
-        temperature
-      }
+    # Stitched field that goes to the Gravity API
+    partners {
+      display_name
     }
   }
 }
 ```
-
-This is a pretty basic example, and we're still working on the complete documentation. Follow along with the discussion on the [graphql-tools PR](https://github.com/apollographql/graphql-tools/pull/382)!
