@@ -6,8 +6,20 @@ Huge thanks to [Mikhail Novikov](https://github.com/freiksenet) for his awesome 
 
 ### Running the example
 
-Just run it like any other npm project:
+First, copy the example .env file:
+```
+cp .env.example .env
+```
 
+In a Convection console (staging, local, or production depending on what you are developing against), generate a valid access token:
+```
+payload =  { aud: 'app', sub: <valid_user_id> }
+token = JWT.encode payload, Convection.config.jwt_secret, 'HS256'
+```
+
+Paste this into your `.env` file under `CONVECTION_ACCESS_TOKEN`.
+
+Then, run it like any other npm project:
 ```
 yarn install
 yarn start
@@ -17,12 +29,13 @@ Then, open [localhost:3000/graphiql](http://localhost:3000/graphiql) in your web
 
 ### What does this do?
 
-In short, this combines two GraphQL APIs:
+In short, this combines three GraphQL APIs:
 
 1. Artsy’s Gravity GraphQL API
 2. Artsy’s Positron GraphQL API
+3. Artsy's Convection GraphQL API
 
-Against those two APIs, we can run the following queries:
+Against those APIs, we can run queries like the following:
 
 ```graphql
 # Get article information from Positron
@@ -37,6 +50,15 @@ query {
 query {
   partner(ids: ["4dd15229e0091e000100166b"]) {
     display_name
+  }
+}
+
+# Get artist name on a submission from Gravity
+query {
+  submission(id: 69) {
+    artist {
+      name
+    }
   }
 }
 ```
