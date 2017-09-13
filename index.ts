@@ -6,15 +6,27 @@ import { createApolloFetch } from 'apollo-fetch';
 
 async function run() {
   const positronSchema = await makeRemoteExecutableSchema(createApolloFetch({
-    uri: 'https://stagingwriter.artsy.net/api/graphql',
+    uri: process.env.POSITRON_GRAPH_URL,
   }));
 
   const gravitySchema = await makeRemoteExecutableSchema(createApolloFetch({
-    uri: 'https://stagingapi.artsy.net/api/graphql',
+    uri: process.env.GRAVITY_GRAPH_URL,
   }));
 
+  const convectionFetch = createApolloFetch({ uri: process.env.CONVECTION_GRAPH_URL });
+  convectionFetch.use(({ request, options }, next) => {
+    if (!options.headers) {
+      options.headers = {};
+    }
+    options.headers['Authorization'] = `Bearer ${process.env.CONVECTION_TOKEN}`
+
+    next();
+  });
+
+  const convectionSchema = await makeRemoteExecutableSchema(convectionFetch)
+
   const schema = mergeSchemas({
-    schemas: [gravitySchema, positronSchema],
+    schemas: [gravitySchema, convectionSchema, positronSchema],
     onTypeConflict: (leftType, rightType) => leftType, // Prefer Gravity over positron, for e.g. Artwork
     links: [
       {
@@ -25,6 +37,17 @@ async function run() {
         fragment: `
           fragment ArticlePartners on Anon201 {
             partner_ids
+          }
+        `,
+      },
+      {
+        name: 'artist',
+        from: 'Submission',
+        to: 'artist',
+        resolveArgs: parent => ({ id: parent.artist_id }),
+        fragment: `
+          fragment SubmissionArtist on Submission {
+            artist_id
           }
         `,
       },
